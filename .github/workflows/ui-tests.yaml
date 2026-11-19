@@ -1,0 +1,94 @@
+name: UI tests (Selenide)
+
+on:
+  # Every night at 03:00 UTC, but the tests only run if something relevant changed since the last run
+  # (scheduled runs always use the default branch)
+  schedule:
+    - cron: '0 3 * * *'
+  # Manual run via "Actions" -> "UI tests (Selenide)" -> "Run workflow" (any branch, always runs the tests)
+  workflow_dispatch:
+
+jobs:
+  changes:
+    name: Check for changes since last run
+    if: github.event_name == 'schedule'
+
+    runs-on: ubuntu-latest
+
+    permissions:
+      actions: read
+      contents: read
+
+    outputs:
+      changed: ${{ steps.check.outputs.changed }}
+
+    steps:
+    - name: Checkout sources
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Compare with last tested commit
+      id: check
+      env:
+        GH_TOKEN: ${{ github.token }}
+        # Only changes in these paths trigger the UI tests (documentation files are excluded)
+        RELEVANT_PATHS: "src pom.xml .mvn mvnw .github/workflows/ui-tests.yaml :!*.adoc :!*.md"
+      run: |
+        set -f  # no shell globbing of the pathspecs in RELEVANT_PATHS
+
+        # Head commit of the last finished run (success or failure) of this workflow on this branch.
+        # Runs skipped because of no changes count as well: their commit has the same relevant content.
+        last_sha=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow ui-tests.yaml --branch "$GITHUB_REF_NAME" \
+          --status completed --limit 50 --json headSha,conclusion \
+          --jq '[.[] | select(.conclusion == "success" or .conclusion == "failure")][0].headSha // empty')
+
+        if [ -z "$last_sha" ]; then
+          echo "No previous run found, running UI tests." | tee -a "$GITHUB_STEP_SUMMARY"
+          changed=true
+        elif ! git cat-file -e "$last_sha^{commit}" 2>/dev/null; then
+          echo "Last tested commit $last_sha is not in the history anymore, running UI tests." | tee -a "$GITHUB_STEP_SUMMARY"
+          changed=true
+        elif [ -n "$(git diff --name-only "$last_sha" HEAD -- $RELEVANT_PATHS)" ]; then
+          echo "Changes since $last_sha, running UI tests:" | tee -a "$GITHUB_STEP_SUMMARY"
+          git diff --name-only "$last_sha" HEAD -- $RELEVANT_PATHS | sed 's/^/- /' | tee -a "$GITHUB_STEP_SUMMARY"
+          changed=true
+        else
+          echo "No relevant changes since $last_sha, UI tests skipped." | tee -a "$GITHUB_STEP_SUMMARY"
+          changed=false
+        fi
+
+        echo "changed=$changed" >> "$GITHUB_OUTPUT"
+
+  ui-tests:
+    name: Run UI tests
+    needs: changes
+    # always() is needed, because "changes" is skipped for manual runs
+    if: always() && (github.event_name == 'workflow_dispatch' || needs.changes.outputs.changed == 'true')
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout sources
+      uses: actions/checkout@v4
+
+    - name: Set up JDK 25
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: 25
+        cache: 'maven'
+
+    # Only the tests tagged with @Tag("UI") are executed
+    - name: Run UI tests with Maven
+      run: ./mvnw -Pci -B "-Dgroups=UI" "-Dselenide.headless=true" "-Dtest.withDelay=false" test
+
+    - name: Upload Selenide screenshots and test reports
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: ui-test-reports
+        path: |
+          target/selenide/reports
+          target/surefire-reports
+        retention-days: 7

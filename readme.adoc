@@ -125,3 +125,22 @@ $ ./mvnw test
 All levels of tests are present in this project, including unit tests, integration tests and end-to-end tests.
 The end-to-end tests are implemented using Selenide.
 Read the `src/test/java/selenidePageObjects` package for more information (Readme).
+
+### UI tests in the CI
+
+The Selenide tests (all test classes tagged with `@Tag("UI")`) are slow, so they are *not* executed on every push or pull request.
+The regular build (`.github/workflows/build.yaml`) excludes them, the workflow `.github/workflows/ui-tests.yaml` runs them:
+
+* automatically every night (03:00 UTC, on the default branch), but only if something relevant changed since the last run
+(files under `src/`, `pom.xml`, the Maven wrapper or the workflow itself; `.adoc`/`.md` files are ignored),
+* manually via _Actions_ -> _UI tests (Selenide)_ -> _Run workflow_ (any branch can be selected, always runs the tests).
+
+Every UI test class has to be tagged with `@Tag("UI")` (or extend `AbstractAcceptanceTests`).
+You don't have to remember this: `UiTestTaggingTests` (an ArchUnit test that runs in every build) fails as soon as a test class uses Selenide or Selenium, directly, via a superclass or via the page objects, without that tag.
+
+To run only the UI tests or only the other tests locally:
+[source, shell]
+----
+$ ./mvnw test -Dgroups=UI
+$ ./mvnw test -DexcludedGroups=UI
+----
