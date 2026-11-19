@@ -9,6 +9,7 @@ import java.util.List;
 /**
  * Special {@link DisplayNameGenerator} that generates display names for test methods based on the {@link AT} annotation.
  * If the annotation is present, it uses the value of the annotation to generate a display name in the format "ATXXXX - Method Name". If the annotation is not present or the value is not a valid number, it defaults to "ATXXXX - Method Name".
+ *
  * @author Oliver Geisel
  */
 public class AT_DisplayNameGenerator implements DisplayNameGenerator {

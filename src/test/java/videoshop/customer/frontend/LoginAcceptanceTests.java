@@ -111,6 +111,7 @@ class LoginAcceptanceTests {
 
 		assertEquals("/", result.getPagePath(),
 				"Login with normal user should redirect to home page");
+		result.getGreeting().shouldHave(text("Hallo " + userName));
 	}
 
 	@Test

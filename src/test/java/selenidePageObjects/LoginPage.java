@@ -64,7 +64,6 @@ import static com.codeborne.selenide.Selenide.*;
 // page_url = http://127.0.0.1:8080/login
 public class LoginPage {
 
-
 	@FindBy(how = How.ID, using = "username")
 	private SelenideElement userNameInput;
 	@FindBy(how = How.ID, using = "password")
@@ -86,6 +85,11 @@ public class LoginPage {
 	}
 
 	public static class LoginRequest extends Request {
+		@FindBy(how = How.CSS, using = "p")
+		private SelenideElement message;
 
+		public SelenideElement getGreeting(){
+			return message;
+		}
 	}
 }

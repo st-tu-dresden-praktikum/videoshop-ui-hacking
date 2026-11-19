@@ -53,7 +53,7 @@ class CatalogAcceptanceTests extends AbstractAcceptanceTests {
 
 	@AT("AT0101")
 	@Test
-	void goToBulRayCatalog() {
+	void goToBluRayCatalog() {
 		open("");
 
 		var burayLink = $$(".item").find(text("BluRay Katalog"));
