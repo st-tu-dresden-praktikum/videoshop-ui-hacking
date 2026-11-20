@@ -43,6 +43,8 @@ class CatalogAcceptanceTests extends AbstractAcceptanceTests {
 	void goToDvdCatalog() {
 		open("");
 
+		System.out.println("Asdf");
+
 		var dvdLink = $$(".item").find(text("DVD Katalog"));
 		dvdLink.shouldBe(visible);
 
