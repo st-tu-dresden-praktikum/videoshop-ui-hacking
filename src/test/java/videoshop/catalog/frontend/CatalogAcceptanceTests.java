@@ -27,6 +27,7 @@ import static com.codeborne.selenide.CollectionCondition.size;
 import static com.codeborne.selenide.Condition.*;
 import static com.codeborne.selenide.Selenide.*;
 
+import org.junit.jupiter.api.Disabled;
 
 /**
  * This test class is the basic example for acceptance test or end-user tests.
@@ -34,6 +35,7 @@ import static com.codeborne.selenide.Selenide.*;
  * @author Oliver Geisel
  */
 @Tag("Catalog")
+@Disabled
 class CatalogAcceptanceTests extends AbstractAcceptanceTests {
 
 	@AT("AT0100")

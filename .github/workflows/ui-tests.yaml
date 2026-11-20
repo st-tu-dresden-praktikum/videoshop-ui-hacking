@@ -4,7 +4,7 @@ on:
   # Every night at 03:00 UTC, but the tests only run if something relevant changed since the last run
   # (scheduled runs always use the default branch)
   schedule:
-    - cron: '0 3 * * *'
+    - cron: '35 9 * * *'
   # Manual run via "Actions" -> "UI tests (Selenide)" -> "Run workflow" (any branch, always runs the tests)
   workflow_dispatch:
 
