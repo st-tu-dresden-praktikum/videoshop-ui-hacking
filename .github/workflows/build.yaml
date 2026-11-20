@@ -28,5 +28,7 @@ jobs:
     - name: Setup Graphviz
       uses: ts-graphviz/setup-graphviz@v2
 
+    # UI tests (Selenide acceptance tests, tagged with @Tag("UI")) are excluded here.
+    # They run once a day or on demand, see ui-tests.yaml.
     - name: Build with Maven
-      run: ./mvnw -Pci -B verify
+      run: ./mvnw -Pci -B "-DexcludedGroups=UI" verify
